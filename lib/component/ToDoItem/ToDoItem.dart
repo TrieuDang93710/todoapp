@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:mobile1/component/SquareRadio/SquareRadio.dart';
-import 'package:mobile1/component/ToDoItem/IToDoItem.dart';
+import 'package:mobile1/api/abs/IToDoItem.dart';
 import 'package:mobile1/component/UpdateItem/UpdateItem.dart';
+import 'package:mobile1/api/network/service.dart';
 
 class ToDoItem extends StatefulWidget {
   final Size mediaQuery;
-  late String id;
-  final String title;
-  final String description;
-  final List<IToDoItem> todos;
-  final Function(int) remove;
+  late String? id;
+  final String? title;
+  final String? description;
+  final IToDoItem item;
+  final List<IToDoItem>? todos;
 
   ToDoItem({
     super.key,
@@ -17,7 +18,7 @@ class ToDoItem extends StatefulWidget {
     required this.title,
     required this.description,
     required this.id,
-    required this.remove,
+    required this.item,
     required this.todos,
   });
 
@@ -32,18 +33,6 @@ class _ToDoItemState extends State<ToDoItem> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
-  void handleUpdateItem(id, body) {
-    int ids = int.parse(id) - 1;
-    setState(() {
-      for (int i = 0; i < widget.todos.length; i++) {
-        if (i == ids) {
-          widget.todos[i].title = body.title;
-          widget.todos[i].description = body.description;
-        }
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     var mediaQuery = MediaQuery.of(context).size;
@@ -57,17 +46,29 @@ class _ToDoItemState extends State<ToDoItem> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SquareRadio<String>(
-            size: 36,
-            value: widget.id,
-            groupValue: _selectedItem,
-            selected: isSelected,
-            onChanged: (value) {
-              setState(() {
-                _selectedItem = value;
-                isSelected = true;
-              });
-            },
+          InkWell(
+            onTap: () {},
+            child: SquareRadio<String>(
+              size: 36,
+              value: widget.id!,
+              groupValue: _selectedItem,
+              selected: isSelected,
+              completed: widget.item.completed!,
+              onChanged: (value) {
+                setState(() {
+                  _selectedItem = value;
+                  isSelected = true;
+                  if (widget.item.completed == false) {
+                    Map<String, dynamic> completeDto = {
+                      'completed': isSelected,
+                    };
+                    int ids = int.parse(widget.id!);
+                    completedToDo(completeDto, ids);
+                    fetchResponse();
+                  }
+                });
+              },
+            ),
           ),
           SizedBox(width: 10),
           Expanded(
@@ -77,23 +78,23 @@ class _ToDoItemState extends State<ToDoItem> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.title,
+                  widget.title!,
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w700,
-                    decoration: isSelected
+                    decoration: widget.item.completed!
                         ? TextDecoration.lineThrough
                         : TextDecoration.none,
                   ),
                 ),
                 Text(
-                  widget.description,
+                  widget.description!,
                   maxLines: 2,
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w400,
                     textBaseline: TextBaseline.alphabetic,
-                    decoration: isSelected
+                    decoration: widget.item.completed!
                         ? TextDecoration.lineThrough
                         : TextDecoration.none,
                   ),
@@ -105,7 +106,7 @@ class _ToDoItemState extends State<ToDoItem> {
             children: [
               InkWell(
                 onTap: () => {
-                  if (isSelected == true)
+                  if (widget.item.completed! == true)
                     showDialog(
                       context: context,
                       builder: (context) {
@@ -133,7 +134,14 @@ class _ToDoItemState extends State<ToDoItem> {
                             ),
                             TextButton(
                               onPressed: () {
-                                widget.remove(int.parse(widget.id) - 1);
+                                Map<String, dynamic> statusDto = {
+                                  'status': true,
+                                };
+                                int ids = int.parse(widget.id!);
+                                setState(() {
+                                  removeToDo(statusDto, ids);
+                                  fetchResponse();
+                                });
                                 Navigator.of(context).pop();
                               },
                               child: Text(
@@ -153,7 +161,7 @@ class _ToDoItemState extends State<ToDoItem> {
                 child: Icon(
                   Icons.delete_forever,
                   size: 36,
-                  color: isSelected ? Colors.red : Colors.red[100],
+                  color: widget.item.completed! ? Colors.red : Colors.red[100],
                 ),
               ),
               SizedBox(width: 15),
@@ -176,7 +184,7 @@ class _ToDoItemState extends State<ToDoItem> {
                               mediaQuery: mediaQuery,
                               titleController: _titleController,
                               descriptionController: _descriptionController,
-                              item: IToDoItem(widget.title, widget.description),
+                              item: widget.item,
                             ),
                             actions: [
                               TextButton(
@@ -198,11 +206,15 @@ class _ToDoItemState extends State<ToDoItem> {
                                   String title = _titleController.text;
                                   String description =
                                       _descriptionController.text;
-                                  // todos.add(IToDoItem(title, description));
-                                  handleUpdateItem(
-                                    widget.id,
-                                    IToDoItem(title, description),
-                                  );
+                                  Map<String, dynamic> updateDto = {
+                                    'title': title,
+                                    'description': description,
+                                  };
+                                  int ids = int.parse(widget.id!);
+                                  setState(() {
+                                    updateToDo(updateDto, ids);
+                                    fetchResponse();
+                                  });
                                   Navigator.of(context).pop();
                                   _titleController.clear();
                                   _descriptionController.clear();
@@ -225,7 +237,9 @@ class _ToDoItemState extends State<ToDoItem> {
                 child: Icon(
                   Icons.edit,
                   size: 36,
-                  color: isSelected ? Colors.purple[100] : Colors.purple,
+                  color: widget.item.completed!
+                      ? Colors.purple[100]
+                      : Colors.purple,
                 ),
               ),
             ],
