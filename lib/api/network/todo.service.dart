@@ -4,15 +4,15 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:mobile1/api/abs/IToDoItem.dart';
 import 'package:mobile1/api/abs/IAddToDo.dart';
+import 'package:mobile1/configs/app_config.dart';
 
-final String url = 'https://todoapp-server-v1-0-1.onrender.com';
+final String url = AppConfig.BASE_URL;
 
 Future<Response> fetchResponse() async {
   var res = await http.get(Uri.parse('$url/api/v1/todos'));
   if (res.statusCode == 200) {
     var jsonDecoded = await jsonDecode(res.body);
     Response todosFromJson = Response.fromJson(jsonDecoded);
-    print("todosFromJson: $todosFromJson");
     return todosFromJson;
   } else {
     throw Exception('Failed to load todos');

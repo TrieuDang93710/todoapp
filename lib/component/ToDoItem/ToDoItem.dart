@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mobile1/component/SquareRadio/SquareRadio.dart';
 import 'package:mobile1/api/abs/IToDoItem.dart';
 import 'package:mobile1/component/UpdateItem/UpdateItem.dart';
-import 'package:mobile1/api/network/service.dart';
+import 'package:mobile1/api/network/todo.service.dart';
+import 'package:mobile1/layout/tabs/TodoDetailTab.dart';
 
 class ToDoItem extends StatefulWidget {
   final Size mediaQuery;
@@ -29,6 +30,7 @@ class ToDoItem extends StatefulWidget {
 class _ToDoItemState extends State<ToDoItem> {
   String _selectedItem = "0";
   late bool isSelected = false;
+  late Future<Response> futureResponse;
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
@@ -41,7 +43,7 @@ class _ToDoItemState extends State<ToDoItem> {
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(width: 1, color: Colors.black45)),
       ),
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -71,25 +73,42 @@ class _ToDoItemState extends State<ToDoItem> {
             ),
           ),
           SizedBox(width: 10),
-          Expanded(
-            flex: 3,
+          SizedBox(
+            width: mediaQuery.width * 0.5,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  widget.title!,
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
-                    decoration: widget.item.completed!
-                        ? TextDecoration.lineThrough
-                        : TextDecoration.none,
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TodoDetailTab(
+                          mediaQuery: mediaQuery,
+                          todo: widget.item,
+                        ),
+                      ),
+                    );
+                    print('Ontap me');
+                  },
+                  child: Text(
+                    widget.title!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      decoration: widget.item.completed!
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
+                    ),
                   ),
                 ),
                 Text(
                   widget.description!,
                   maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w400,

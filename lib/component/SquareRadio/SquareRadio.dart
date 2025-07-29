@@ -11,6 +11,7 @@ class SquareRadio<T> extends StatelessWidget {
   final Color unselectedColor;
 
   const SquareRadio({
+    super.key,
     required this.value,
     required this.groupValue,
     required this.selected,
